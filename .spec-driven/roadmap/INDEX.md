@@ -8,6 +8,7 @@
 - [m13-grpc-interface.md](milestones/m13-grpc-interface.md) - M13 - gRPC 接口 - proposed
 - [m14-auto-spec-driven-integration.md](milestones/m14-auto-spec-driven-integration.md) - M14 - auto-spec-driven 集成与收尾 - proposed
 - [m2-tool-surface-basics.md](milestones/m2-tool-surface-basics.md) - M2 - Tool Surface 基础工具集 - proposed
+- [m2x-builtin-external-tools.md](milestones/m2x-builtin-external-tools.md) - M2x - 内置外部工具集成 - proposed
 - [m3-agent-lifecycle.md](milestones/m3-agent-lifecycle.md) - M3 - Agent 生命周期与编排 - proposed
 - [m4-llm-backend.md](milestones/m4-llm-backend.md) - M4 - LLM 后端集成 - proposed
 - [m5-permissions.md](milestones/m5-permissions.md) - M5 - 权限模型与执行钩子 - proposed

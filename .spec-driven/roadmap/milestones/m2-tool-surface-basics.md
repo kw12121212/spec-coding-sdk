@@ -8,12 +8,13 @@
 
 - Bash 执行工具（命令运行、超时、输出捕获）
 - 文件读/写/编辑工具
-- 内容搜索工具（基于 ripgrep 风格）
+- 内容搜索工具（基于 ripgrep）
 - 文件模式匹配工具（glob pattern）
 - 工具级别预留权限检查钩子（基于 M1 PermissionProvider 接口）
 
 ## Out of Scope
 
+- 内置外部工具管理（M2x）
 - LSP 客户端工具（M8）
 - MCP 协议工具（M9）
 - 权限策略的具体执行逻辑（M5）
@@ -29,7 +30,7 @@
 
 - `tool-bash` - Bash 命令执行工具实现
 - `tool-file-ops` - 文件读/写/编辑工具实现
-- `tool-grep` - 内容搜索工具实现
+- `tool-grep` - 基于 ripgrep 的内容搜索工具实现
 - `tool-glob` - 文件模式匹配工具实现
 
 ## Dependencies
@@ -48,3 +49,4 @@
 ## Notes
 
 - 工具行为应与 claw-code Rust 实现保持**功能对等、设计对齐但不照搬**
+- tool-grep 使用的 ripgrep 二进制由 M2x 的 builtin-tool-manager 提供
