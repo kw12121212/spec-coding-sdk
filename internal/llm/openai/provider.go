@@ -2,7 +2,6 @@
 package openai
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -11,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/kw12121212/spec-coding-sdk/internal/llm"
+	"github.com/kw12121212/spec-coding-sdk/internal/llm/streaming"
 )
 
 // Compile-time check that OpenAIProvider satisfies llm.Provider.
@@ -271,19 +271,24 @@ func (p *OpenAIProvider) Stream(ctx context.Context, req llm.Request, callback l
 		return parseAPIError(resp.StatusCode, resp.Body)
 	}
 
-	scanner := bufio.NewScanner(resp.Body)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if !strings.HasPrefix(line, "data: ") {
-			continue
-		}
-		data := strings.TrimPrefix(line, "data: ")
-		if data == "[DONE]" {
-			return nil
+	parser := streaming.NewSSEParser(resp.Body)
+	acc := streaming.NewToolCallAccumulator()
+
+	for {
+		evt, err := parser.Next()
+		if err != nil {
+			// Stream ended — flush any remaining partial tool calls.
+			if remaining := acc.Flush(); len(remaining) > 0 {
+				_ = callback(llm.StreamChunk{ToolCalls: remaining})
+			}
+			if err == io.EOF {
+				return nil
+			}
+			return err
 		}
 
 		var chunk chatResponse
-		if err := json.Unmarshal([]byte(data), &chunk); err != nil {
+		if err := json.Unmarshal([]byte(evt.Data), &chunk); err != nil {
 			return fmt.Errorf("parse SSE chunk: %w", err)
 		}
 
@@ -300,12 +305,22 @@ func (p *OpenAIProvider) Stream(ctx context.Context, req llm.Request, callback l
 			Content: choice.Delta.Content,
 		}
 
-		for _, tc := range choice.Delta.ToolCalls {
-			sChunk.ToolCalls = append(sChunk.ToolCalls, llm.ToolCall{
-				ID:    tc.ID,
-				Name:  tc.Function.Name,
-				Input: json.RawMessage(tc.Function.Arguments),
-			})
+		// Accumulate incremental tool calls.
+		if len(choice.Delta.ToolCalls) > 0 {
+			deltaCalls := make([]llm.ToolCall, len(choice.Delta.ToolCalls))
+			finals := make([]bool, len(choice.Delta.ToolCalls))
+			for i, tc := range choice.Delta.ToolCalls {
+				deltaCalls[i] = llm.ToolCall{
+					ID:    tc.ID,
+					Name:  tc.Function.Name,
+					Input: json.RawMessage(tc.Function.Arguments),
+				}
+				// OpenAI sends finish_reason="tool_calls" on the final chunk
+				// that carries the last arguments fragment.
+				finals[i] = choice.FinishReason == "tool_calls"
+			}
+			completed := acc.FeedChunk(deltaCalls, finals)
+			sChunk.ToolCalls = completed
 		}
 
 		if chunk.Usage.PromptTokens > 0 || chunk.Usage.CompletionTokens > 0 {
@@ -315,9 +330,10 @@ func (p *OpenAIProvider) Stream(ctx context.Context, req llm.Request, callback l
 			}
 		}
 
-		if err := callback(sChunk); err != nil {
-			return err
+		if sChunk.Content != "" || len(sChunk.ToolCalls) > 0 || sChunk.Usage.PromptTokens != 0 || sChunk.Usage.CompletionTokens != 0 {
+			if err := callback(sChunk); err != nil {
+				return err
+			}
 		}
 	}
-	return scanner.Err()
 }

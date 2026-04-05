@@ -2,7 +2,6 @@
 package claude
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -11,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/kw12121212/spec-coding-sdk/internal/llm"
+	"github.com/kw12121212/spec-coding-sdk/internal/llm/streaming"
 )
 
 // Compile-time check that ClaudeProvider satisfies llm.Provider.
@@ -349,63 +349,102 @@ func (p *ClaudeProvider) Stream(ctx context.Context, req llm.Request, callback l
 		return parseAPIError(resp.StatusCode, resp.Body)
 	}
 
-	scanner := bufio.NewScanner(resp.Body)
-	var eventType string
+	parser := streaming.NewSSEParser(resp.Body)
+	acc := streaming.NewToolCallAccumulator()
+	// Tracks tool-use content block index → tool ID/name mapping.
+	tcMeta := make(map[int]struct{ ID, Name string })
 
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		if evt, ok := strings.CutPrefix(line, "event: "); ok {
-			eventType = evt
-			continue
-		}
-
-		data, ok := strings.CutPrefix(line, "data: ")
-		if !ok {
-			continue
-		}
-
-		switch eventType {
-		case "content_block_delta":
-			var event sseContentBlockDelta
-			if err := json.Unmarshal([]byte(data), &event); err != nil {
-				return fmt.Errorf("parse content_block_delta: %w", err)
+	for {
+		evt, err := parser.Next()
+		if err != nil {
+			// Flush remaining partial tool calls.
+			if remaining := acc.Flush(); len(remaining) > 0 {
+				_ = callback(llm.StreamChunk{ToolCalls: remaining})
 			}
+			if err == io.EOF {
+				return nil
+			}
+			return err
+		}
 
-			chunk := llm.StreamChunk{}
-			switch event.Delta.Type {
-			case "text_delta":
-				chunk.Content = event.Delta.Text
-			case "input_json_delta":
-				chunk.ToolCalls = []llm.ToolCall{
-					{Input: json.RawMessage(event.Delta.PartialJSON)},
+		switch evt.Event {
+		case "content_block_start":
+			var block struct {
+				Type  string `json:"type"`
+				Index int    `json:"index"`
+				ContentBlock struct {
+					Type  string `json:"type"`
+					ID    string `json:"id"`
+					Name  string `json:"name"`
+				} `json:"content_block"`
+			}
+			if err := json.Unmarshal([]byte(evt.Data), &block); err != nil {
+				continue
+			}
+			if block.ContentBlock.Type == "tool_use" {
+				tcMeta[block.Index] = struct{ ID, Name string }{
+					ID:   block.ContentBlock.ID,
+					Name: block.ContentBlock.Name,
 				}
 			}
 
-			if err := callback(chunk); err != nil {
-				return err
+		case "content_block_delta":
+			var event sseContentBlockDelta
+			if err := json.Unmarshal([]byte(evt.Data), &event); err != nil {
+				return fmt.Errorf("parse content_block_delta: %w", err)
+			}
+
+			sChunk := llm.StreamChunk{}
+			switch event.Delta.Type {
+			case "text_delta":
+				sChunk.Content = event.Delta.Text
+			case "input_json_delta":
+				meta, ok := tcMeta[event.Index]
+				if ok {
+					completed := acc.FeedPartial(event.Index, meta.ID, meta.Name, event.Delta.PartialJSON, false)
+					sChunk.ToolCalls = completed
+				}
+			}
+
+			if sChunk.Content != "" || len(sChunk.ToolCalls) > 0 {
+				if err := callback(sChunk); err != nil {
+					return err
+				}
+			}
+
+		case "content_block_stop":
+			var block struct {
+				Index int `json:"index"`
+			}
+			if err := json.Unmarshal([]byte(evt.Data), &block); err != nil {
+				continue
+			}
+			meta, ok := tcMeta[block.Index]
+			if ok {
+				completed := acc.FeedPartial(block.Index, meta.ID, meta.Name, "", true)
+				if len(completed) > 0 {
+					if err := callback(llm.StreamChunk{ToolCalls: completed}); err != nil {
+						return err
+					}
+				}
 			}
 
 		case "message_delta":
 			var event sseMessageDelta
-			if err := json.Unmarshal([]byte(data), &event); err != nil {
+			if err := json.Unmarshal([]byte(evt.Data), &event); err != nil {
 				return fmt.Errorf("parse message_delta: %w", err)
 			}
 
-			chunk := llm.StreamChunk{
+			sChunk := llm.StreamChunk{
 				Usage: llm.Usage{
 					PromptTokens:     event.Usage.InputTokens,
 					CompletionTokens: event.Usage.OutputTokens,
 				},
 			}
 
-			if err := callback(chunk); err != nil {
+			if err := callback(sChunk); err != nil {
 				return err
 			}
-
-		case "message_stop":
-			return nil
 		}
 	}
-	return scanner.Err()
 }
