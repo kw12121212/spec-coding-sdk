@@ -72,11 +72,19 @@ func WithEmitter(emitter core.EventEmitter) Option {
 	}
 }
 
+// WithConversation sets the Conversation for the agent.
+func WithConversation(c *Conversation) Option {
+	return func(a *BaseAgent) {
+		a.conversation = c
+	}
+}
+
 // BaseAgent implements core.Agent with lifecycle state management.
 type BaseAgent struct {
-	mu      sync.RWMutex
-	state   State
-	emitter core.EventEmitter
+	mu           sync.RWMutex
+	state        State
+	emitter      core.EventEmitter
+	conversation *Conversation
 }
 
 // Compile-time check that BaseAgent satisfies core.Agent.
@@ -89,6 +97,9 @@ func New(opts ...Option) *BaseAgent {
 	}
 	for _, opt := range opts {
 		opt(a)
+	}
+	if a.conversation == nil {
+		a.conversation = NewConversation()
 	}
 	return a
 }
@@ -173,5 +184,23 @@ func (a *BaseAgent) transition(from, to State, msg string) error {
 			Timestamp: time.Now(),
 		})
 	}
+	return nil
+}
+
+// Conversation returns the agent's current conversation.
+func (a *BaseAgent) Conversation() *Conversation {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return a.conversation
+}
+
+// SetConversation replaces the agent's conversation. Only allowed in StateInit.
+func (a *BaseAgent) SetConversation(c *Conversation) error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if a.state != StateInit {
+		return fmt.Errorf("cannot set conversation in state %s", a.state)
+	}
+	a.conversation = c
 	return nil
 }

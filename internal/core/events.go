@@ -2,10 +2,11 @@ package core
 
 // Event type constants identify each kind of structured event.
 const (
-	EventToolCall   = "tool.call"
-	EventToolResult = "tool.result"
-	EventAgentState = "agent.state"
-	EventError      = "error"
+	EventToolCall    = "tool.call"
+	EventToolResult  = "tool.result"
+	EventAgentState  = "agent.state"
+	EventError       = "error"
+	EventMessageAdded = "message.added"
 )
 
 // ToolCallEvent is emitted when a tool is invoked.
@@ -43,6 +44,16 @@ type ErrorEvent struct {
 
 // EventType returns the event type constant for ErrorEvent.
 func (ErrorEvent) EventType() string { return EventError }
+
+// MessageEvent is emitted when a message is added to a conversation.
+type MessageEvent struct {
+	Role     string `json:"role"`
+	Content  string `json:"content"`
+	ToolName string `json:"tool_name,omitempty"`
+}
+
+// EventType returns the event type constant for MessageEvent.
+func (MessageEvent) EventType() string { return EventMessageAdded }
 
 // EventEmitter is the interface for emitting structured events.
 type EventEmitter interface {

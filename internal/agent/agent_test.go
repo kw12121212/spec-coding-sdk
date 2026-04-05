@@ -444,3 +444,53 @@ func TestConcurrentRunTool(t *testing.T) {
 		t.Fatalf("expected %d results, got %d", goroutines, count)
 	}
 }
+
+func TestDefaultConversation(t *testing.T) {
+	a := New()
+	conv := a.Conversation()
+	if conv == nil {
+		t.Fatal("expected non-nil default conversation")
+	}
+	if conv.Len() != 0 {
+		t.Fatalf("expected empty conversation, got %d messages", conv.Len())
+	}
+}
+
+func TestWithConversation(t *testing.T) {
+	c := NewConversation()
+	c.Add(NewMessage(RoleUser, "existing"))
+	a := New(WithConversation(c))
+
+	conv := a.Conversation()
+	if conv.Len() != 1 {
+		t.Fatalf("expected 1 message, got %d", conv.Len())
+	}
+	msgs := conv.Messages()
+	if msgs[0].Content != "existing" {
+		t.Fatalf("expected 'existing', got %q", msgs[0].Content)
+	}
+}
+
+func TestSetConversation_InitState(t *testing.T) {
+	a := New()
+	newConv := NewConversation()
+	newConv.Add(NewMessage(RoleAssistant, "new"))
+
+	err := a.SetConversation(newConv)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if a.Conversation().Len() != 1 {
+		t.Fatalf("expected 1 message, got %d", a.Conversation().Len())
+	}
+}
+
+func TestSetConversation_NonInitState(t *testing.T) {
+	a := New()
+	_ = a.Start(context.Background())
+
+	err := a.SetConversation(NewConversation())
+	if err == nil {
+		t.Fatal("expected error when setting conversation in running state")
+	}
+}
