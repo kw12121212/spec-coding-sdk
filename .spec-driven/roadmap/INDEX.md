@@ -1,7 +1,7 @@
 # Roadmap Index
 
 ## Milestones
-- [m1-skeleton-core-types.md](milestones/m1-skeleton-core-types.md) - M1 - 项目骨架与核心接口 - proposed
+- [m1-skeleton-core-types.md](milestones/m1-skeleton-core-types.md) - M1 - 项目骨架与核心接口 - complete
 - [m10-native-go-sdk.md](milestones/m10-native-go-sdk.md) - M10 - Native Go SDK 层 - proposed
 - [m11-jsonrpc-interface.md](milestones/m11-jsonrpc-interface.md) - M11 - JSON-RPC 接口 - proposed
 - [m12-http-rest-api.md](milestones/m12-http-rest-api.md) - M12 - HTTP REST API - proposed
