@@ -34,8 +34,7 @@
 - `llm-provider-openai` - Declared: complete - OpenAI API 兼容 provider 实现（覆盖 OpenAI 及所有 OpenAI 兼容供应商）
 - `llm-provider-claude` - Declared: complete - Anthropic Claude Messages API provider 实现
 - `llm-streaming` - Declared: complete - 统一流式响应处理（SSE 解析 + 回调机制，兼容两种 provider 的 streaming 格式）
-- `llm-token-counter` - Declared: planned - Token 计数与上下文窗口管理实现
-
+- `llm-token-counter` - Declared: complete - Token 计数与上下文窗口管理实现
 
 ## Dependencies
 
@@ -50,7 +49,9 @@
 
 ## Status
 
-- Declared: proposed
+- Declared: complete
+
+
 
 
 
