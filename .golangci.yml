@@ -1,0 +1,26 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - revive
+    - staticcheck
+    - unused
+
+formatters:
+  exclusions:
+    generated: lax
+
+issues:
+  exclusions:
+    generated: lax
+
+linters-settings:
+  revive:
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: errorf
+      - name: unreachable-code
