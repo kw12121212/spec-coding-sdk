@@ -1,4 +1,4 @@
-# M12 - HTTP REST API
+# M13 - HTTP REST API
 
 ## Goal
 
@@ -33,9 +33,9 @@
 
 ## Dependencies
 
-- M10 Native Go SDK 层
-- M3 Agent 生命周期（长运行任务的状态查询）
-- M5 权限系统（认证集成）
+- M11 Native Go SDK 层
+- M4 Agent 生命周期（长运行任务的状态查询）
+- M6 权限系统（认证集成）
 
 ## Risks
 
@@ -50,4 +50,4 @@
 
 - REST API 设计参考 claw-code 现有的 HTTP 接口模式
 - 使用 Go 标准库或轻量框架，避免重型依赖
-- 与 M11、M13 可并行开发
+- 与 M12、M14 可并行开发

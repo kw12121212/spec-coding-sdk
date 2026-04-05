@@ -1,4 +1,4 @@
-# M10 - Native Go SDK 层
+# M11 - Native Go SDK 层
 
 ## Goal
 
@@ -6,7 +6,7 @@
 
 ## In Scope
 
-- 面向第三方的公共 SDK API（facade 层，封装 M1-M9 全部核心能力）
+- 面向第三方的公共 SDK API（facade 层，封装 M1-M10 全部核心能力）
 - 事件订阅与回调机制
 - 统一错误处理模式
 - SDK 使用文档和示例
@@ -14,7 +14,7 @@
 ## Out of Scope
 
 - 非 Go 语言 SDK（未来可能）
-- 具体传输层实现（M11-M13）
+- 具体传输层实现（M12-M14）
 - 底层接口的重新定义（SDK 是 M1 接口的 facade，不替代它们）
 
 ## Done Criteria
@@ -32,9 +32,9 @@
 
 ## Dependencies
 
-- M1-M4 核心能力（接口、工具集、agent 运行时、LLM 后端）
-- M5 权限系统（SDK 需暴露权限配置）
-- M8-M9 协议工具（LSP/MCP 作为可选工具注册）
+- M1-M5 核心能力（接口、工具集、agent 运行时、LLM 后端）
+- M6 权限系统（SDK 需暴露权限配置）
+- M9-M10 协议工具（LSP/MCP 作为可选工具注册）
 
 ## Risks
 
@@ -49,4 +49,4 @@
 
 - SDK 层是 M1 核心接口的 **facade**，不是替代。底层 M1 接口仍然可用，SDK 提供更高层次的便捷 API
 - 参考 claw-code 的使用模式提炼常用操作为简洁的 SDK 调用
-- M6-M7（注册表）为可选依赖，SDK 可延迟初始化注册表功能
+- M7-M8（注册表）为可选依赖，SDK 可延迟初始化注册表功能

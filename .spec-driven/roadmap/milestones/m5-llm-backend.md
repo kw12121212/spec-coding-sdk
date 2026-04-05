@@ -1,4 +1,4 @@
-# M4 - LLM 后端集成
+# M5 - LLM 后端集成
 
 ## Goal
 
@@ -16,7 +16,7 @@
 
 - 非 Anthropic provider 的实现（可后续扩展）
 - 上下文压缩/截断策略（属于会话管理增强）
-- Agent 编排逻辑（M3）
+- Agent 编排逻辑（M4）
 
 ## Done Criteria
 
@@ -49,5 +49,5 @@
 ## Notes
 
 - LLM 客户端接口设计应支持未来添加其他 provider（OpenAI、本地模型等）
-- 与 M2、M3 可并行开发；M3 使用 mock LLM 完成编排测试，M4 提供真实实现后两者集成
+- 与 M2、M4 可并行开发；M4 使用 mock LLM 完成编排测试，M5 提供真实实现后两者集成
 - 参考 claw-code 的 LLM 调用模式，但抽象层设计由本 SDK 自行决定

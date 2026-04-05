@@ -1,4 +1,4 @@
-# M9 - MCP 协议适配
+# M10 - MCP 协议适配
 
 ## Goal
 
@@ -14,7 +14,7 @@
 ## Out of Scope
 
 - MCP 传输层实现（JSON-RPC / SSE）—— 本里程碑仅定义协议层
-- LSP 集成（M8）
+- LSP 集成（M9）
 
 ## Done Criteria
 
@@ -44,4 +44,4 @@
 ## Notes
 
 - MCP 集成参考 claw-code 的 MCP 实现模式
-- 与 M8（LSP）无依赖关系，可并行开发
+- 与 M9（LSP）无依赖关系，可并行开发

@@ -14,10 +14,10 @@
 
 ## Out of Scope
 
-- 内置外部工具管理（M2x）
-- LSP 客户端工具（M8）
-- MCP 协议工具（M9）
-- 权限策略的具体执行逻辑（M5）
+- 内置外部工具管理（M3）
+- LSP 客户端工具（M9）
+- MCP 协议工具（M10）
+- 权限策略的具体执行逻辑（M6）
 
 ## Done Criteria
 
@@ -28,7 +28,7 @@
 
 ## Planned Changes
 
-- `tool-bash` - Bash 命令执行工具实现
+- `tool-bash` - Bash 命令执行工具实现 (done)
 - `tool-file-ops` - 文件读/写/编辑工具实现
 - `tool-grep` - 基于 ripgrep 的内容搜索工具实现
 - `tool-glob` - 文件模式匹配工具实现
@@ -49,4 +49,4 @@
 ## Notes
 
 - 工具行为应与 claw-code Rust 实现保持**功能对等、设计对齐但不照搬**
-- tool-grep 使用的 ripgrep 二进制由 M2x 的 builtin-tool-manager 提供
+- tool-grep 使用的 ripgrep 二进制由 M3 的 builtin-tool-manager 提供

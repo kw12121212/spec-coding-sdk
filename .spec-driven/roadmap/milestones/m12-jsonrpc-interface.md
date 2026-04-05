@@ -1,4 +1,4 @@
-# M11 - JSON-RPC 接口
+# M12 - JSON-RPC 接口
 
 ## Goal
 
@@ -13,8 +13,8 @@
 
 ## Out of Scope
 
-- HTTP 传输（M12）
-- gRPC 传输（M13）
+- HTTP 传输（M13）
+- gRPC 传输（M14）
 - 批量请求（JSON-RPC 2.0 规范要求但复杂度高，纳入后续迭代）
 
 ## Done Criteria
@@ -33,7 +33,7 @@
 
 ## Dependencies
 
-- M10 Native Go SDK 层
+- M11 Native Go SDK 层
 
 ## Risks
 

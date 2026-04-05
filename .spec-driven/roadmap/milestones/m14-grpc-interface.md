@@ -1,4 +1,4 @@
-# M13 - gRPC 接口
+# M14 - gRPC 接口
 
 ## Goal
 
@@ -32,7 +32,7 @@
 
 ## Dependencies
 
-- M10 Native Go SDK 层
+- M11 Native Go SDK 层
 - Protocol Buffers 编译工具链
 
 ## Risks
@@ -48,4 +48,4 @@
 
 - .proto 定义需考虑多语言客户端兼容性，即使首期只生成 Go stub
 - 参考 claw-code gRPC 接口的行为定义
-- 与 M11、M12 可并行开发
+- 与 M12、M13 可并行开发

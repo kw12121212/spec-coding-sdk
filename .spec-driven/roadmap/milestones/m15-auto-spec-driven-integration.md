@@ -1,4 +1,4 @@
-# M14 - auto-spec-driven 集成与收尾
+# M15 - auto-spec-driven 集成与收尾
 
 ## Goal
 
@@ -13,7 +13,7 @@
 
 - auto-spec-driven skill 本身的开发（外部依赖）
 - CI/CD pipeline 搭建（可作为后续增强）
-- 各接口层的端到端测试（已在 M11-M13 各自完成）
+- 各接口层的端到端测试（已在 M12-M14 各自完成）
 
 ## Done Criteria
 
@@ -29,7 +29,7 @@
 
 ## Dependencies
 
-- M10 Native Go SDK 层
+- M11 Native Go SDK 层
 - auto-spec-driven skill 代码可用
 
 ## Risks
@@ -42,5 +42,5 @@
 
 ## Notes
 
-- 此里程碑是整个项目的收尾阶段，各接口层的行为一致性已在 M11-M13 各自的 e2e 测试中验证
+- 此里程碑是整个项目的收尾阶段，各接口层的行为一致性已在 M12-M14 各自的 e2e 测试中验证
 - 发布脚本需支持多平台交叉编译（linux/darwin/windows, amd64/arm64）

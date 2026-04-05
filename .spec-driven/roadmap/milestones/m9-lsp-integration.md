@@ -1,4 +1,4 @@
-# M8 - LSP 客户端工具
+# M9 - LSP 客户端工具
 
 ## Goal
 
@@ -13,7 +13,7 @@
 ## Out of Scope
 
 - 具体 LSP server 的集成（由使用者按语言接入）
-- MCP 协议（M9）
+- MCP 协议（M10）
 
 ## Done Criteria
 
@@ -42,4 +42,4 @@
 ## Notes
 
 - LSP 客户端需要支持常见的 language server（gopls、typescript-language-server 等）
-- 与 M9（MCP）无依赖关系，可并行开发
+- 与 M10（MCP）无依赖关系，可并行开发
