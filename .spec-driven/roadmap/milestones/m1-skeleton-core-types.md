@@ -28,10 +28,10 @@
 
 ## Planned Changes
 
-- `project-scaffold` - 初始化 Go module、目录结构、Makefile、lint 配置 ✅ (archived 2026-04-05)
-- `core-interfaces` - 定义 Tool、Agent、Event、PermissionProvider 等核心接口 ✅ (archived 2026-04-05)
-- `config-loader` - 实现 config.yaml 解析与结构体映射 ✅ (archived 2026-04-05)
-- `event-system-types` - 定义结构化事件系统的核心类型 ✅ (archived 2026-04-05)
+- `project-scaffold` - Declared: complete - 初始化 Go module、目录结构、Makefile、lint 配置
+- `core-interfaces` - Declared: complete - 定义 Tool、Agent、Event、PermissionProvider 等核心接口
+- `config-loader` - Declared: complete - 实现 config.yaml 解析与结构体映射
+- `event-system-types` - Declared: complete - 定义结构化事件系统的核心类型
 
 ## Dependencies
 

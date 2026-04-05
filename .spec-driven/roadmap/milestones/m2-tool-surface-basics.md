@@ -28,10 +28,10 @@
 
 ## Planned Changes
 
-- `tool-bash` - Bash 命令执行工具实现 (done)
-- `tool-file-ops` - 文件读/写/编辑工具实现 (done)
-- `tool-grep` - 基于 ripgrep 的内容搜索工具实现 (done)
-- `tool-glob` - 文件模式匹配工具实现
+- `tool-bash` - Declared: complete - Bash 命令执行工具实现
+- `tool-file-ops` - Declared: complete - 文件读/写/编辑工具实现
+- `tool-grep` - Declared: complete - 基于 ripgrep 的内容搜索工具实现
+- `tool-glob` - Declared: complete - 文件模式匹配工具实现
 
 ## Dependencies
 
@@ -44,7 +44,7 @@
 
 ## Status
 
-- Declared: proposed
+- Declared: complete
 
 ## Notes
 

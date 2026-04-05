@@ -26,7 +26,7 @@
 
 ## Planned Changes
 
-- `registry-cron` - Cron 调度器与定时任务注册表实现
+- `registry-cron` - Declared: planned - Cron 调度器与定时任务注册表实现
 
 ## Dependencies
 

@@ -23,7 +23,7 @@
 
 ## Planned Changes
 
-- `tool-lsp` - Language Server Protocol 客户端工具实现
+- `tool-lsp` - Declared: planned - Language Server Protocol 客户端工具实现
 
 ## Dependencies
 

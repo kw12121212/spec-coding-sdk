@@ -25,10 +25,10 @@
 
 ## Planned Changes
 
-- `grpc-proto` - .proto 定义文件与代码生成配置
-- `grpc-service` - gRPC 服务端实现
-- `grpc-streaming` - 流式 RPC 实现（事件流、输出流）
-- `grpc-e2e-tests` - gRPC 层端到端测试实现
+- `grpc-proto` - Declared: planned - .proto 定义文件与代码生成配置
+- `grpc-service` - Declared: planned - gRPC 服务端实现
+- `grpc-streaming` - Declared: planned - 流式 RPC 实现（事件流、输出流）
+- `grpc-e2e-tests` - Declared: planned - gRPC 层端到端测试实现
 
 ## Dependencies
 

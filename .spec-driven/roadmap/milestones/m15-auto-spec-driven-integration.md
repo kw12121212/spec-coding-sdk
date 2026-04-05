@@ -24,8 +24,8 @@
 
 ## Planned Changes
 
-- `auto-spec-driven-integration` - 内置 skill 集成与接口层适配
-- `release-prep` - 文档完善与发布脚本实现
+- `auto-spec-driven-integration` - Declared: planned - 内置 skill 集成与接口层适配
+- `release-prep` - Declared: planned - 文档完善与发布脚本实现
 
 ## Dependencies
 

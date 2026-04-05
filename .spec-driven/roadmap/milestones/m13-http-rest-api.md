@@ -26,10 +26,10 @@
 
 ## Planned Changes
 
-- `http-routes` - REST API 路由定义与 handler 实现
-- `http-middleware` - 认证与限流中间件实现
-- `http-models` - 请求/响应 JSON 模型定义
-- `http-e2e-tests` - HTTP 层端到端测试实现
+- `http-routes` - Declared: planned - REST API 路由定义与 handler 实现
+- `http-middleware` - Declared: planned - 认证与限流中间件实现
+- `http-models` - Declared: planned - 请求/响应 JSON 模型定义
+- `http-e2e-tests` - Declared: planned - HTTP 层端到端测试实现
 
 ## Dependencies
 

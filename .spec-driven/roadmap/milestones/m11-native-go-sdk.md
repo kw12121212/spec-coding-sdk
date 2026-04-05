@@ -26,9 +26,9 @@
 
 ## Planned Changes
 
-- `sdk-public-api` - 公共 SDK facade 接口定义与实现
-- `sdk-events` - 事件订阅与回调机制实现
-- `sdk-error-handling` - 统一错误类型与处理模式实现
+- `sdk-public-api` - Declared: planned - 公共 SDK facade 接口定义与实现
+- `sdk-events` - Declared: planned - 事件订阅与回调机制实现
+- `sdk-error-handling` - Declared: planned - 统一错误类型与处理模式实现
 
 ## Dependencies
 

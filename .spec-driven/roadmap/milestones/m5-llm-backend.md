@@ -28,9 +28,9 @@
 
 ## Planned Changes
 
-- `llm-client` - LLM 客户端抽象接口与 Anthropic provider 实现
-- `llm-streaming` - 流式响应处理与回调机制实现
-- `llm-token-counter` - Token 计数与上下文窗口管理实现
+- `llm-client` - Declared: planned - LLM 客户端抽象接口与 Anthropic provider 实现
+- `llm-streaming` - Declared: planned - 流式响应处理与回调机制实现
+- `llm-token-counter` - Declared: planned - Token 计数与上下文窗口管理实现
 
 ## Dependencies
 
