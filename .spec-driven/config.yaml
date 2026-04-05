@@ -1,0 +1,38 @@
+schema: spec-driven
+context: |
+  Go SDK reimplementation of claw-code (a Rust coding agent harness), exposing its
+  core capabilities through multiple interface layers: native Go SDK library, JSON-RPC
+  over stdin, HTTP REST API, and gRPC. The project reuses claw-code's tool surface
+  (bash, file ops, grep, glob, LSP, MCP, task/team/cron registries, permissions) and
+  its agent lifecycle model, but repackages them for third-party integration.
+  Built-in auto-spec-driven skill from ../auto-spec-driven for spec-first development.
+  Tech stack: Go 1.25+, Protocol Buffers for gRPC, structured event system.
+  Licensed under Apache 2.0.
+rules:
+  specs:
+    - Describe observable behavior only — no implementation details, technology
+      choices, or internal structure
+    - MUST = required with no exceptions; SHOULD = default unless explicitly
+      justified; MAY = genuinely optional
+    - Each requirement must be independently verifiable from outside the system
+  change:
+    - Implement only what is in scope in proposal.md — if scope needs to expand,
+      use /spec-driven-modify first, never expand silently
+    - When a requirement or task is ambiguous, ask the user before proceeding —
+      do not assume or guess
+    - Delta specs must reflect what was actually built, not the original plan
+    - Mark tasks [x] immediately upon completion — never batch at the end
+    - Every change must include test tasks (lint + unit tests at minimum)
+  code:
+    - Read existing code before modifying it
+    - Implement only what the current task requires — no speculative features
+    - No abstractions for hypothetical future needs (YAGNI)
+  test:
+    - Tests must verify observable behavior described in specs, not internal
+      implementation details
+    - Each test must be independent — no shared mutable state between tests
+    - Prefer real dependencies over mocks for code the project owns
+# fileMatch:              # per-pattern rules applied in addition to global rules above
+#   - pattern: "**/*.test.*"
+#     rules:
+#       - Tests must cover happy path, error cases, and edge cases
