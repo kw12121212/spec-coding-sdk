@@ -28,7 +28,7 @@
 
 - `agent-lifecycle` - Declared: complete - Agent 状态机与生命周期管理实现
 - `agent-conversation` - Declared: complete - 会话与消息管理实现
-- `agent-orchestrator` - Declared: planned - 多轮工具调用编排循环实现
+- `agent-orchestrator` - Declared: complete - 多轮工具调用编排循环实现
 
 ## Dependencies
 
@@ -41,7 +41,7 @@
 
 ## Status
 
-- Declared: proposed
+- Declared: complete
 
 ## Notes
 
