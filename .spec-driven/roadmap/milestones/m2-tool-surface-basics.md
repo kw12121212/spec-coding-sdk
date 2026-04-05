@@ -30,7 +30,7 @@
 
 - `tool-bash` - Bash 命令执行工具实现 (done)
 - `tool-file-ops` - 文件读/写/编辑工具实现 (done)
-- `tool-grep` - 基于 ripgrep 的内容搜索工具实现
+- `tool-grep` - 基于 ripgrep 的内容搜索工具实现 (done)
 - `tool-glob` - 文件模式匹配工具实现
 
 ## Dependencies
