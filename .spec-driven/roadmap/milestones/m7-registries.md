@@ -25,7 +25,7 @@
 
 ## Planned Changes
 
-- `registry-tasks` - Declared: planned - 任务注册表实现
+- `registry-tasks` - Declared: complete - 任务注册表实现
 - `registry-teams` - Declared: planned - 团队注册表实现
 
 ## Dependencies
