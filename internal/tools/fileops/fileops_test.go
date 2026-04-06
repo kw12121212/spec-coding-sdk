@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/kw12121212/spec-coding-sdk/internal/core"
+	"github.com/kw12121212/spec-coding-sdk/internal/permission"
 )
 
 // Compile-time checks that tools satisfy core.Tool.
@@ -35,6 +36,13 @@ func mustMarshal(t *testing.T, v any) json.RawMessage {
 		t.Fatalf("marshal input: %v", err)
 	}
 	return b
+}
+
+func newPolicyProviderForDecision(operation string, decision permission.Decision) core.PermissionProvider {
+	return permission.NewPolicyProvider(permission.NewStaticPolicy(
+		permission.DecisionAllow,
+		permission.Rule{OperationPattern: operation, Decision: decision},
+	))
 }
 
 // --- ReadTool tests ---
@@ -506,6 +514,52 @@ func TestWriteTool_PermissionDenied(t *testing.T) {
 	}
 }
 
+func TestWriteTool_PermissionDeniedDoesNotCreateFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	target := filepath.Join(tmpDir, "blocked.txt")
+	tool := NewWriteTool(newPolicyProviderForDecision("file:write", permission.DecisionDeny))
+
+	result, err := tool.Execute(context.Background(), mustMarshal(t, WriteInput{
+		FilePath: target,
+		Content:  "blocked",
+	}))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !result.IsError {
+		t.Fatal("expected IsError for permission denied")
+	}
+	if result.Output != "permission denied: file:write on "+target {
+		t.Fatalf("unexpected permission error: %q", result.Output)
+	}
+	if _, err := os.Stat(target); !os.IsNotExist(err) {
+		t.Fatalf("expected file to be absent, stat err=%v", err)
+	}
+}
+
+func TestWriteTool_NeedConfirmationDoesNotCreateFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	target := filepath.Join(tmpDir, "blocked.txt")
+	tool := NewWriteTool(newPolicyProviderForDecision("file:write", permission.DecisionNeedConfirmation))
+
+	result, err := tool.Execute(context.Background(), mustMarshal(t, WriteInput{
+		FilePath: target,
+		Content:  "blocked",
+	}))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !result.IsError {
+		t.Fatal("expected IsError for need confirmation")
+	}
+	if result.Output != "confirmation required: file:write on "+target {
+		t.Fatalf("unexpected confirmation error: %q", result.Output)
+	}
+	if _, err := os.Stat(target); !os.IsNotExist(err) {
+		t.Fatalf("expected file to be absent, stat err=%v", err)
+	}
+}
+
 func TestWriteTool_PermissionNil(t *testing.T) {
 	tmpFile := filepath.Join(t.TempDir(), "test.txt")
 	tool := NewWriteTool(nil)
@@ -533,6 +587,68 @@ func TestEditTool_PermissionDenied(t *testing.T) {
 	}
 	if !result.IsError {
 		t.Fatal("expected IsError for permission denied")
+	}
+}
+
+func TestEditTool_PermissionDeniedDoesNotModifyFile(t *testing.T) {
+	tmpFile := filepath.Join(t.TempDir(), "edit.txt")
+	if err := os.WriteFile(tmpFile, []byte("original"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	tool := NewEditTool(newPolicyProviderForDecision("file:edit", permission.DecisionDeny))
+	result, err := tool.Execute(context.Background(), mustMarshal(t, EditInput{
+		FilePath:  tmpFile,
+		OldString: "original",
+		NewString: "changed",
+	}))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !result.IsError {
+		t.Fatal("expected IsError for permission denied")
+	}
+	if result.Output != "permission denied: file:edit on "+tmpFile {
+		t.Fatalf("unexpected permission error: %q", result.Output)
+	}
+
+	data, err := os.ReadFile(tmpFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != "original" {
+		t.Fatalf("expected file to remain unchanged, got %q", string(data))
+	}
+}
+
+func TestEditTool_NeedConfirmationDoesNotModifyFile(t *testing.T) {
+	tmpFile := filepath.Join(t.TempDir(), "edit.txt")
+	if err := os.WriteFile(tmpFile, []byte("original"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	tool := NewEditTool(newPolicyProviderForDecision("file:edit", permission.DecisionNeedConfirmation))
+	result, err := tool.Execute(context.Background(), mustMarshal(t, EditInput{
+		FilePath:  tmpFile,
+		OldString: "original",
+		NewString: "changed",
+	}))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !result.IsError {
+		t.Fatal("expected IsError for need confirmation")
+	}
+	if result.Output != "confirmation required: file:edit on "+tmpFile {
+		t.Fatalf("unexpected confirmation error: %q", result.Output)
+	}
+
+	data, err := os.ReadFile(tmpFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != "original" {
+		t.Fatalf("expected file to remain unchanged, got %q", string(data))
 	}
 }
 

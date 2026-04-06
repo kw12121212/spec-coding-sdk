@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/kw12121212/spec-coding-sdk/internal/core"
+	"github.com/kw12121212/spec-coding-sdk/internal/permission"
 )
 
 // Compile-time check that Tool satisfies core.Tool.
@@ -30,6 +32,13 @@ func mustMarshal(t *testing.T, v any) json.RawMessage {
 		t.Fatalf("marshal input: %v", err)
 	}
 	return b
+}
+
+func newPolicyProviderForDecision(operation string, decision permission.Decision) core.PermissionProvider {
+	return permission.NewPolicyProvider(permission.NewStaticPolicy(
+		permission.DecisionAllow,
+		permission.Rule{OperationPattern: operation, Decision: decision},
+	))
 }
 
 func TestExecute_HappyPath(t *testing.T) {
@@ -133,6 +142,54 @@ func TestExecute_PermissionDenied(t *testing.T) {
 	}
 	if !strings.Contains(result.Output, "permission denied") {
 		t.Fatalf("expected permission denied message, got %q", result.Output)
+	}
+}
+
+func TestExecute_PermissionDeniedDoesNotRunCommand(t *testing.T) {
+	tmpDir := t.TempDir()
+	marker := filepath.Join(tmpDir, "marker.txt")
+	tool := New(newPolicyProviderForDecision("bash:execute", permission.DecisionDeny))
+	input := mustMarshal(t, Input{
+		Command:    "echo blocked > marker.txt",
+		WorkingDir: tmpDir,
+	})
+
+	result, err := tool.Execute(context.Background(), input)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !result.IsError {
+		t.Fatal("expected IsError=true for permission denied")
+	}
+	if result.Output != "permission denied: bash:execute on echo blocked > marker.txt" {
+		t.Fatalf("unexpected permission error: %q", result.Output)
+	}
+	if _, err := os.Stat(marker); !os.IsNotExist(err) {
+		t.Fatalf("expected marker file to be absent, stat err=%v", err)
+	}
+}
+
+func TestExecute_NeedConfirmationDoesNotRunCommand(t *testing.T) {
+	tmpDir := t.TempDir()
+	marker := filepath.Join(tmpDir, "marker.txt")
+	tool := New(newPolicyProviderForDecision("bash:execute", permission.DecisionNeedConfirmation))
+	input := mustMarshal(t, Input{
+		Command:    "echo blocked > marker.txt",
+		WorkingDir: tmpDir,
+	})
+
+	result, err := tool.Execute(context.Background(), input)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !result.IsError {
+		t.Fatal("expected IsError=true for need confirmation")
+	}
+	if result.Output != "confirmation required: bash:execute on echo blocked > marker.txt" {
+		t.Fatalf("unexpected confirmation error: %q", result.Output)
+	}
+	if _, err := os.Stat(marker); !os.IsNotExist(err) {
+		t.Fatalf("expected marker file to be absent, stat err=%v", err)
 	}
 }
 

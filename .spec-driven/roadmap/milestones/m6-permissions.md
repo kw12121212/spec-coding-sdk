@@ -26,7 +26,7 @@
 ## Planned Changes
 
 - `permissions-model` - Declared: complete - 权限模型定义与策略接口实现
-- `permissions-hooks` - Declared: planned - 权限检查执行钩子与工具调用拦截实现
+- `permissions-hooks` - Declared: complete - 权限检查执行钩子与工具调用拦截实现
 
 ## Dependencies
 
@@ -40,7 +40,7 @@
 
 ## Status
 
-- Declared: proposed
+- Declared: complete
 
 ## Notes
 
