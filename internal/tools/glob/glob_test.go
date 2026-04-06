@@ -198,11 +198,17 @@ func TestSortByModTime(t *testing.T) {
 	f2 := filepath.Join(dir, "second.txt")
 	f3 := filepath.Join(dir, "third.txt")
 
-	os.WriteFile(f1, []byte("1"), 0o644)
+	if err := os.WriteFile(f1, []byte("1"), 0o644); err != nil {
+		t.Fatalf("write first file: %v", err)
+	}
 	time.Sleep(10 * time.Millisecond)
-	os.WriteFile(f2, []byte("2"), 0o644)
+	if err := os.WriteFile(f2, []byte("2"), 0o644); err != nil {
+		t.Fatalf("write second file: %v", err)
+	}
 	time.Sleep(10 * time.Millisecond)
-	os.WriteFile(f3, []byte("3"), 0o644)
+	if err := os.WriteFile(f3, []byte("3"), 0o644); err != nil {
+		t.Fatalf("write third file: %v", err)
+	}
 
 	tool := New(nil)
 	raw, _ := json.Marshal(Input{Pattern: "*.txt", Path: dir})
@@ -235,9 +241,18 @@ func TestDefaultPathIsCWD(t *testing.T) {
 	tool := New(nil)
 
 	// Change working directory to test dir
-	origDir, _ := os.Getwd()
-	os.Chdir(dir)
-	defer os.Chdir(origDir)
+	origDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("get cwd: %v", err)
+	}
+	if err := os.Chdir(dir); err != nil {
+		t.Fatalf("chdir to test dir: %v", err)
+	}
+	defer func() {
+		if err := os.Chdir(origDir); err != nil {
+			t.Fatalf("restore cwd: %v", err)
+		}
+	}()
 
 	raw, _ := json.Marshal(Input{Pattern: "*.txt"})
 	result, err := tool.Execute(context.Background(), raw)

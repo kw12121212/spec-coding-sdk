@@ -27,10 +27,14 @@ func WithHTTPClient(client *http.Client) Option {
 }
 
 // OpenAIProvider implements llm.Provider for OpenAI-compatible Chat Completions APIs.
+//
+//nolint:revive // Keep the explicit provider name aligned with the package's public API.
 type OpenAIProvider struct {
 	config llm.ProviderConfig
 	client *http.Client
 }
+
+//revive:enable:var-naming
 
 // NewProvider creates a new OpenAI-compatible provider with the given config and options.
 func NewProvider(config llm.ProviderConfig, opts ...Option) *OpenAIProvider {
@@ -47,24 +51,24 @@ func NewProvider(config llm.ProviderConfig, opts ...Option) *OpenAIProvider {
 // --- OpenAI wire types ---
 
 type chatRequest struct {
-	Model       string           `json:"model"`
-	Messages    []chatMessage    `json:"messages"`
-	Temperature *float64         `json:"temperature,omitempty"`
-	MaxTokens   *int             `json:"max_tokens,omitempty"`
-	Stream      bool             `json:"stream"`
+	Model       string        `json:"model"`
+	Messages    []chatMessage `json:"messages"`
+	Temperature *float64      `json:"temperature,omitempty"`
+	MaxTokens   *int          `json:"max_tokens,omitempty"`
+	Stream      bool          `json:"stream"`
 }
 
 type chatMessage struct {
-	Role       string           `json:"role"`
-	Content    string           `json:"content"`
-	ToolCalls  []chatToolCall   `json:"tool_calls,omitempty"`
-	ToolCallID string           `json:"tool_call_id,omitempty"`
+	Role       string         `json:"role"`
+	Content    string         `json:"content"`
+	ToolCalls  []chatToolCall `json:"tool_calls,omitempty"`
+	ToolCallID string         `json:"tool_call_id,omitempty"`
 }
 
 type chatToolCall struct {
-	ID       string           `json:"id"`
-	Type     string           `json:"type"`
-	Function chatFunction     `json:"function"`
+	ID       string       `json:"id"`
+	Type     string       `json:"type"`
+	Function chatFunction `json:"function"`
 }
 
 type chatFunction struct {
@@ -78,16 +82,16 @@ type chatResponse struct {
 }
 
 type chatChoice struct {
-	Index        int          `json:"index"`
-	Message      chatMessage  `json:"message"`
-	FinishReason string       `json:"finish_reason"`
-	Delta        *chatDelta   `json:"delta,omitempty"`
+	Index        int         `json:"index"`
+	Message      chatMessage `json:"message"`
+	FinishReason string      `json:"finish_reason"`
+	Delta        *chatDelta  `json:"delta,omitempty"`
 }
 
 type chatDelta struct {
-	Role      string           `json:"role,omitempty"`
-	Content   string           `json:"content,omitempty"`
-	ToolCalls []chatToolCall   `json:"tool_calls,omitempty"`
+	Role      string         `json:"role,omitempty"`
+	Content   string         `json:"content,omitempty"`
+	ToolCalls []chatToolCall `json:"tool_calls,omitempty"`
 }
 
 type chatUsage struct {
@@ -240,7 +244,7 @@ func (p *OpenAIProvider) Complete(ctx context.Context, req llm.Request) (llm.Res
 	if err != nil {
 		return llm.Response{}, fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return llm.Response{}, parseAPIError(resp.StatusCode, resp.Body)
@@ -265,7 +269,7 @@ func (p *OpenAIProvider) Stream(ctx context.Context, req llm.Request, callback l
 	if err != nil {
 		return fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return parseAPIError(resp.StatusCode, resp.Body)

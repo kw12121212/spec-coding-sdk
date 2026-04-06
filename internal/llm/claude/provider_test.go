@@ -61,7 +61,9 @@ func TestComplete_NormalTextResponse(t *testing.T) {
 			StopReason: "end_turn",
 			Usage:      responseUsage{InputTokens: 10, OutputTokens: 5},
 		}
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			t.Fatalf("encode response: %v", err)
+		}
 	}))
 	defer ts.Close()
 
@@ -87,7 +89,7 @@ func TestComplete_NormalTextResponse(t *testing.T) {
 }
 
 func TestComplete_ToolUseResponse(t *testing.T) {
-	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		resp := messagesResponse{
 			Content: []contentBlock{
 				{Type: "text", Text: "Let me run that."},
@@ -101,7 +103,9 @@ func TestComplete_ToolUseResponse(t *testing.T) {
 			StopReason: "tool_use",
 			Usage:      responseUsage{InputTokens: 20, OutputTokens: 10},
 		}
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			t.Fatalf("encode response: %v", err)
+		}
 	}))
 	defer ts.Close()
 
@@ -132,7 +136,9 @@ func TestComplete_ToolUseResponse(t *testing.T) {
 func TestStream_TextChunks(t *testing.T) {
 	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req messagesRequest
-		json.NewDecoder(r.Body).Decode(&req)
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
 		if !req.Stream {
 			t.Error("expected stream=true for Stream")
 		}
@@ -151,7 +157,9 @@ func TestStream_TextChunks(t *testing.T) {
 			"event: message_stop\ndata: {\"type\":\"message_stop\"}\n\n",
 		}
 		for _, evt := range events {
-			fmt.Fprint(w, evt)
+			if _, err := fmt.Fprint(w, evt); err != nil {
+				t.Fatalf("write event: %v", err)
+			}
 		}
 	}))
 	defer ts.Close()
@@ -180,7 +188,7 @@ func TestStream_TextChunks(t *testing.T) {
 }
 
 func TestStream_ToolCallChunks(t *testing.T) {
-	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/event-stream")
 		w.WriteHeader(http.StatusOK)
 
@@ -195,7 +203,9 @@ func TestStream_ToolCallChunks(t *testing.T) {
 			"event: message_stop\ndata: {\"type\":\"message_stop\"}\n\n",
 		}
 		for _, evt := range events {
-			fmt.Fprint(w, evt)
+			if _, err := fmt.Fprint(w, evt); err != nil {
+				t.Fatalf("write event: %v", err)
+			}
 		}
 	}))
 	defer ts.Close()
@@ -224,9 +234,11 @@ func TestStream_ToolCallChunks(t *testing.T) {
 }
 
 func TestHTTPError(t *testing.T) {
-	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusTooManyRequests)
-		w.Write([]byte(`{"type":"error","error":{"type":"rate_limit_error","message":"Rate limit exceeded"}}`))
+		if _, err := w.Write([]byte(`{"type":"error","error":{"type":"rate_limit_error","message":"Rate limit exceeded"}}`)); err != nil {
+			t.Fatalf("write error response: %v", err)
+		}
 	}))
 	defer ts.Close()
 
@@ -247,7 +259,9 @@ func TestHTTPError(t *testing.T) {
 func TestEmptyMessages(t *testing.T) {
 	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req messagesRequest
-		json.NewDecoder(r.Body).Decode(&req)
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
 		if len(req.Messages) != 0 {
 			t.Errorf("expected empty messages, got %d", len(req.Messages))
 		}
@@ -257,7 +271,9 @@ func TestEmptyMessages(t *testing.T) {
 			},
 			StopReason: "end_turn",
 		}
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			t.Fatalf("encode response: %v", err)
+		}
 	}))
 	defer ts.Close()
 
@@ -273,7 +289,9 @@ func TestEmptyMessages(t *testing.T) {
 func TestModelFallback(t *testing.T) {
 	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req messagesRequest
-		json.NewDecoder(r.Body).Decode(&req)
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
 		if req.Model != "claude-sonnet-4-6" {
 			t.Errorf("expected fallback to config model claude-sonnet-4-6, got %q", req.Model)
 		}
@@ -283,7 +301,9 @@ func TestModelFallback(t *testing.T) {
 			},
 			StopReason: "end_turn",
 		}
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			t.Fatalf("encode response: %v", err)
+		}
 	}))
 	defer ts.Close()
 
@@ -299,7 +319,9 @@ func TestModelFallback(t *testing.T) {
 func TestMessageFormatConversion(t *testing.T) {
 	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req messagesRequest
-		json.NewDecoder(r.Body).Decode(&req)
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
 
 		// System message extracted to top-level
 		if req.System != "You are a helpful assistant." {
@@ -316,7 +338,9 @@ func TestMessageFormatConversion(t *testing.T) {
 			t.Errorf("msg[0] role: got %q", req.Messages[0].Role)
 		}
 		var userBlocks []textContentBlock
-		json.Unmarshal(req.Messages[0].Content, &userBlocks)
+		if err := json.Unmarshal(req.Messages[0].Content, &userBlocks); err != nil {
+			t.Fatalf("unmarshal user blocks: %v", err)
+		}
 		if len(userBlocks) != 1 || userBlocks[0].Text != "run ls" {
 			t.Errorf("msg[0] content: got %+v", userBlocks)
 		}
@@ -326,13 +350,17 @@ func TestMessageFormatConversion(t *testing.T) {
 			t.Errorf("msg[1] role: got %q", req.Messages[1].Role)
 		}
 		var asstBlocks []json.RawMessage
-		json.Unmarshal(req.Messages[1].Content, &asstBlocks)
+		if err := json.Unmarshal(req.Messages[1].Content, &asstBlocks); err != nil {
+			t.Fatalf("unmarshal assistant blocks: %v", err)
+		}
 		// Only tool_use block (Content is empty, no text block emitted)
 		if len(asstBlocks) != 1 {
 			t.Fatalf("msg[1] blocks: got %d, want 1", len(asstBlocks))
 		}
 		var tu toolUseContentBlock
-		json.Unmarshal(asstBlocks[0], &tu)
+		if err := json.Unmarshal(asstBlocks[0], &tu); err != nil {
+			t.Fatalf("unmarshal tool_use block: %v", err)
+		}
 		if tu.Name != "bash" {
 			t.Errorf("msg[1] tool_use name: got %q", tu.Name)
 		}
@@ -342,7 +370,9 @@ func TestMessageFormatConversion(t *testing.T) {
 			t.Errorf("msg[2] role: got %q, want user (tool result)", req.Messages[2].Role)
 		}
 		var toolResultBlocks []toolResultContentBlock
-		json.Unmarshal(req.Messages[2].Content, &toolResultBlocks)
+		if err := json.Unmarshal(req.Messages[2].Content, &toolResultBlocks); err != nil {
+			t.Fatalf("unmarshal tool result blocks: %v", err)
+		}
 		if len(toolResultBlocks) != 1 {
 			t.Fatalf("msg[2] tool_result blocks: got %d", len(toolResultBlocks))
 		}
@@ -356,7 +386,9 @@ func TestMessageFormatConversion(t *testing.T) {
 			},
 			StopReason: "end_turn",
 		}
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			t.Fatalf("encode response: %v", err)
+		}
 	}))
 	defer ts.Close()
 
@@ -378,7 +410,9 @@ func TestMessageFormatConversion(t *testing.T) {
 func TestMaxTokensDefault(t *testing.T) {
 	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req messagesRequest
-		json.NewDecoder(r.Body).Decode(&req)
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
 		if req.MaxTokens != 4096 {
 			t.Errorf("max_tokens: got %d, want 4096 (default)", req.MaxTokens)
 		}
@@ -388,7 +422,9 @@ func TestMaxTokensDefault(t *testing.T) {
 			},
 			StopReason: "end_turn",
 		}
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			t.Fatalf("encode response: %v", err)
+		}
 	}))
 	defer ts.Close()
 
@@ -401,7 +437,7 @@ func TestMaxTokensDefault(t *testing.T) {
 }
 
 func TestCallbackErrorStopsStream(t *testing.T) {
-	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/event-stream")
 		w.WriteHeader(http.StatusOK)
 
@@ -410,7 +446,9 @@ func TestCallbackErrorStopsStream(t *testing.T) {
 			"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\" world\"}}\n\n",
 		}
 		for _, evt := range events {
-			fmt.Fprint(w, evt)
+			if _, err := fmt.Fprint(w, evt); err != nil {
+				t.Fatalf("write event: %v", err)
+			}
 		}
 	}))
 	defer ts.Close()
@@ -418,7 +456,7 @@ func TestCallbackErrorStopsStream(t *testing.T) {
 	errStopped := fmt.Errorf("stop streaming")
 	err := p.Stream(context.Background(), llm.Request{
 		Messages: []llm.Message{{Role: llm.RoleUser, Content: "Hi"}},
-	}, func(chunk llm.StreamChunk) error {
+	}, func(_ llm.StreamChunk) error {
 		return errStopped
 	})
 	if err != errStopped {
@@ -427,15 +465,17 @@ func TestCallbackErrorStopsStream(t *testing.T) {
 }
 
 func TestStream_HTTPError(t *testing.T) {
-	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(`{"type":"error","error":{"type":"authentication_error","message":"Invalid API key"}}`))
+		if _, err := w.Write([]byte(`{"type":"error","error":{"type":"authentication_error","message":"Invalid API key"}}`)); err != nil {
+			t.Fatalf("write error response: %v", err)
+		}
 	}))
 	defer ts.Close()
 
 	err := p.Stream(context.Background(), llm.Request{
 		Messages: []llm.Message{{Role: llm.RoleUser, Content: "Hi"}},
-	}, func(chunk llm.StreamChunk) error { return nil })
+	}, func(_ llm.StreamChunk) error { return nil })
 	if err == nil {
 		t.Fatal("expected error for 401 response")
 	}

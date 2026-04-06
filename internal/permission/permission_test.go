@@ -261,7 +261,7 @@ func TestPolicyProvider_NeedConfirmation(t *testing.T) {
 	}
 }
 
-func TestPolicyProvider_ImplementsInterface(t *testing.T) {
+func TestPolicyProvider_ImplementsInterface(_ *testing.T) {
 	// Compile-time check already in adapter.go; this runtime test verifies it works.
 	var _ interface {
 		Check(ctx context.Context, operation string, resource string) error

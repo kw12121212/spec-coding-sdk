@@ -60,7 +60,9 @@ func TestComplete_NormalTextResponse(t *testing.T) {
 			},
 			Usage: chatUsage{PromptTokens: 10, CompletionTokens: 5},
 		}
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			t.Fatalf("encode response: %v", err)
+		}
 	}))
 	defer ts.Close()
 
@@ -86,7 +88,7 @@ func TestComplete_NormalTextResponse(t *testing.T) {
 }
 
 func TestComplete_ToolCallResponse(t *testing.T) {
-	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		resp := chatResponse{
 			Choices: []chatChoice{
 				{
@@ -109,7 +111,9 @@ func TestComplete_ToolCallResponse(t *testing.T) {
 			},
 			Usage: chatUsage{PromptTokens: 20, CompletionTokens: 10},
 		}
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			t.Fatalf("encode response: %v", err)
+		}
 	}))
 	defer ts.Close()
 
@@ -137,7 +141,9 @@ func TestComplete_ToolCallResponse(t *testing.T) {
 func TestStream_NormalText(t *testing.T) {
 	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req chatRequest
-		json.NewDecoder(r.Body).Decode(&req)
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
 		if !req.Stream {
 			t.Error("expected stream=true for Stream")
 		}
@@ -151,9 +157,13 @@ func TestStream_NormalText(t *testing.T) {
 			`{"choices":[{"delta":{"content":"!"}}],"usage":{"prompt_tokens":10,"completion_tokens":5}}`,
 		}
 		for _, chunk := range chunks {
-			fmt.Fprintf(w, "data: %s\n\n", chunk)
+			if _, err := fmt.Fprintf(w, "data: %s\n\n", chunk); err != nil {
+				t.Fatalf("write chunk: %v", err)
+			}
 		}
-		fmt.Fprint(w, "data: [DONE]\n\n")
+		if _, err := fmt.Fprint(w, "data: [DONE]\n\n"); err != nil {
+			t.Fatalf("write done event: %v", err)
+		}
 	}))
 	defer ts.Close()
 
@@ -181,18 +191,22 @@ func TestStream_NormalText(t *testing.T) {
 }
 
 func TestStream_CallbackError(t *testing.T) {
-	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/event-stream")
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, "data: %s\n\n", `{"choices":[{"delta":{"content":"Hello"}}],"usage":{}}`)
-		fmt.Fprintf(w, "data: %s\n\n", `{"choices":[{"delta":{"content":" world"}}],"usage":{}}`)
+		if _, err := fmt.Fprintf(w, "data: %s\n\n", `{"choices":[{"delta":{"content":"Hello"}}],"usage":{}}`); err != nil {
+			t.Fatalf("write first chunk: %v", err)
+		}
+		if _, err := fmt.Fprintf(w, "data: %s\n\n", `{"choices":[{"delta":{"content":" world"}}],"usage":{}}`); err != nil {
+			t.Fatalf("write second chunk: %v", err)
+		}
 	}))
 	defer ts.Close()
 
 	errStopped := fmt.Errorf("stop streaming")
 	err := p.Stream(context.Background(), llm.Request{
 		Messages: []llm.Message{{Role: llm.RoleUser, Content: "Hi"}},
-	}, func(chunk llm.StreamChunk) error {
+	}, func(_ llm.StreamChunk) error {
 		return errStopped
 	})
 	if err != errStopped {
@@ -201,9 +215,11 @@ func TestStream_CallbackError(t *testing.T) {
 }
 
 func TestHTTPError(t *testing.T) {
-	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusTooManyRequests)
-		w.Write([]byte(`{"error":{"message":"Rate limit exceeded","type":"rate_limit_error","code":"429"}}`))
+		if _, err := w.Write([]byte(`{"error":{"message":"Rate limit exceeded","type":"rate_limit_error","code":"429"}}`)); err != nil {
+			t.Fatalf("write error response: %v", err)
+		}
 	}))
 	defer ts.Close()
 
@@ -222,9 +238,11 @@ func TestHTTPError(t *testing.T) {
 }
 
 func TestHTTPError_NonJSON(t *testing.T) {
-	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("internal server error"))
+		if _, err := w.Write([]byte("internal server error")); err != nil {
+			t.Fatalf("write error response: %v", err)
+		}
 	}))
 	defer ts.Close()
 
@@ -239,7 +257,9 @@ func TestHTTPError_NonJSON(t *testing.T) {
 func TestEmptyMessages(t *testing.T) {
 	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req chatRequest
-		json.NewDecoder(r.Body).Decode(&req)
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
 		if len(req.Messages) != 0 {
 			t.Errorf("expected empty messages, got %d", len(req.Messages))
 		}
@@ -248,7 +268,9 @@ func TestEmptyMessages(t *testing.T) {
 				{Message: chatMessage{Role: "assistant", Content: "ok"}, FinishReason: "stop"},
 			},
 		}
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			t.Fatalf("encode response: %v", err)
+		}
 	}))
 	defer ts.Close()
 
@@ -262,13 +284,15 @@ func TestEmptyMessages(t *testing.T) {
 }
 
 func TestBaseURL_CustomProvider(t *testing.T) {
-	customHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	customHandler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		resp := chatResponse{
 			Choices: []chatChoice{
 				{Message: chatMessage{Role: "assistant", Content: "deepseek response"}, FinishReason: "stop"},
 			},
 		}
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			t.Fatalf("encode response: %v", err)
+		}
 	})
 	ts := httptest.NewServer(customHandler)
 	defer ts.Close()
@@ -296,7 +320,9 @@ func TestBaseURL_CustomProvider(t *testing.T) {
 func TestModelFallback(t *testing.T) {
 	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req chatRequest
-		json.NewDecoder(r.Body).Decode(&req)
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
 		if req.Model != "gpt-4" {
 			t.Errorf("expected fallback to config model gpt-4, got %q", req.Model)
 		}
@@ -305,7 +331,9 @@ func TestModelFallback(t *testing.T) {
 				{Message: chatMessage{Role: "assistant", Content: "ok"}, FinishReason: "stop"},
 			},
 		}
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			t.Fatalf("encode response: %v", err)
+		}
 	}))
 	defer ts.Close()
 
@@ -321,7 +349,9 @@ func TestModelFallback(t *testing.T) {
 func TestMessageFormatConversion(t *testing.T) {
 	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req chatRequest
-		json.NewDecoder(r.Body).Decode(&req)
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
 
 		if len(req.Messages) != 3 {
 			t.Fatalf("expected 3 messages, got %d", len(req.Messages))
@@ -353,7 +383,9 @@ func TestMessageFormatConversion(t *testing.T) {
 				{Message: chatMessage{Role: "assistant", Content: "ok"}, FinishReason: "stop"},
 			},
 		}
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			t.Fatalf("encode response: %v", err)
+		}
 	}))
 	defer ts.Close()
 
@@ -374,7 +406,9 @@ func TestMessageFormatConversion(t *testing.T) {
 func TestOptionalFields(t *testing.T) {
 	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req chatRequest
-		json.NewDecoder(r.Body).Decode(&req)
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
 
 		if req.Temperature != nil {
 			t.Errorf("Temperature should be nil when zero, got %v", req.Temperature)
@@ -388,7 +422,9 @@ func TestOptionalFields(t *testing.T) {
 				{Message: chatMessage{Role: "assistant", Content: "ok"}, FinishReason: "stop"},
 			},
 		}
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			t.Fatalf("encode response: %v", err)
+		}
 	}))
 	defer ts.Close()
 
@@ -401,15 +437,17 @@ func TestOptionalFields(t *testing.T) {
 }
 
 func TestStream_HTTPError(t *testing.T) {
-	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	p, ts := newTestServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(`{"error":{"message":"Invalid API key","type":"authentication_error","code":"401"}}`))
+		if _, err := w.Write([]byte(`{"error":{"message":"Invalid API key","type":"authentication_error","code":"401"}}`)); err != nil {
+			t.Fatalf("write error response: %v", err)
+		}
 	}))
 	defer ts.Close()
 
 	err := p.Stream(context.Background(), llm.Request{
 		Messages: []llm.Message{{Role: llm.RoleUser, Content: "Hi"}},
-	}, func(chunk llm.StreamChunk) error { return nil })
+	}, func(_ llm.StreamChunk) error { return nil })
 	if err == nil {
 		t.Fatal("expected error for 401 response")
 	}

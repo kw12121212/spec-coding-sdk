@@ -27,10 +27,14 @@ func WithHTTPClient(client *http.Client) Option {
 }
 
 // ClaudeProvider implements llm.Provider for the Anthropic Claude Messages API.
+//
+//nolint:revive // Keep the explicit provider name aligned with the package's public API.
 type ClaudeProvider struct {
 	config llm.ProviderConfig
 	client *http.Client
 }
+
+//revive:enable:var-naming
 
 // NewProvider creates a new Claude provider with the given config and options.
 func NewProvider(config llm.ProviderConfig, opts ...Option) *ClaudeProvider {
@@ -47,12 +51,12 @@ func NewProvider(config llm.ProviderConfig, opts ...Option) *ClaudeProvider {
 // --- Claude wire types ---
 
 type messagesRequest struct {
-	Model       string              `json:"model"`
-	System      string              `json:"system,omitempty"`
-	Messages    []claudeMessage     `json:"messages"`
-	MaxTokens   int                 `json:"max_tokens"`
-	Temperature *float64            `json:"temperature,omitempty"`
-	Stream      bool                `json:"stream"`
+	Model       string          `json:"model"`
+	System      string          `json:"system,omitempty"`
+	Messages    []claudeMessage `json:"messages"`
+	MaxTokens   int             `json:"max_tokens"`
+	Temperature *float64        `json:"temperature,omitempty"`
+	Stream      bool            `json:"stream"`
 }
 
 type claudeMessage struct {
@@ -79,13 +83,13 @@ type toolResultContentBlock struct {
 }
 
 type messagesResponse struct {
-	ID         string             `json:"id"`
-	Type       string             `json:"type"`
-	Role       string             `json:"role"`
-	Content    []contentBlock     `json:"content"`
-	Model      string             `json:"model"`
-	StopReason string             `json:"stop_reason"`
-	Usage      responseUsage      `json:"usage"`
+	ID         string         `json:"id"`
+	Type       string         `json:"type"`
+	Role       string         `json:"role"`
+	Content    []contentBlock `json:"content"`
+	Model      string         `json:"model"`
+	StopReason string         `json:"stop_reason"`
+	Usage      responseUsage  `json:"usage"`
 }
 
 type contentBlock struct {
@@ -112,24 +116,24 @@ type errorResponse struct {
 // --- SSE event types ---
 
 type sseContentBlockDelta struct {
-	Type  string      `json:"type"`
-	Index int         `json:"index"`
-	Delta sseDelta    `json:"delta"`
+	Type  string   `json:"type"`
+	Index int      `json:"index"`
+	Delta sseDelta `json:"delta"`
 }
 
 type sseDelta struct {
-	Type           string          `json:"type"`
-	Text           string          `json:"text,omitempty"`
-	PartialJSON    string          `json:"partial_json,omitempty"`
-	StopReason     string          `json:"stop_reason,omitempty"`
-	InputTokens    int             `json:"input_tokens,omitempty"`
-	OutputTokens   int             `json:"output_tokens,omitempty"`
+	Type         string `json:"type"`
+	Text         string `json:"text,omitempty"`
+	PartialJSON  string `json:"partial_json,omitempty"`
+	StopReason   string `json:"stop_reason,omitempty"`
+	InputTokens  int    `json:"input_tokens,omitempty"`
+	OutputTokens int    `json:"output_tokens,omitempty"`
 }
 
 type sseMessageDelta struct {
-	Type       string      `json:"type"`
-	Delta      sseDelta    `json:"delta"`
-	Usage      responseUsage `json:"usage"`
+	Type  string        `json:"type"`
+	Delta sseDelta      `json:"delta"`
+	Usage responseUsage `json:"usage"`
 }
 
 // --- Format conversion ---
@@ -318,7 +322,7 @@ func (p *ClaudeProvider) Complete(ctx context.Context, req llm.Request) (llm.Res
 	if err != nil {
 		return llm.Response{}, fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return llm.Response{}, parseAPIError(resp.StatusCode, resp.Body)
@@ -343,7 +347,7 @@ func (p *ClaudeProvider) Stream(ctx context.Context, req llm.Request, callback l
 	if err != nil {
 		return fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return parseAPIError(resp.StatusCode, resp.Body)
@@ -370,12 +374,12 @@ func (p *ClaudeProvider) Stream(ctx context.Context, req llm.Request, callback l
 		switch evt.Event {
 		case "content_block_start":
 			var block struct {
-				Type  string `json:"type"`
-				Index int    `json:"index"`
+				Type         string `json:"type"`
+				Index        int    `json:"index"`
 				ContentBlock struct {
-					Type  string `json:"type"`
-					ID    string `json:"id"`
-					Name  string `json:"name"`
+					Type string `json:"type"`
+					ID   string `json:"id"`
+					Name string `json:"name"`
 				} `json:"content_block"`
 			}
 			if err := json.Unmarshal([]byte(evt.Data), &block); err != nil {

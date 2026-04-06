@@ -27,7 +27,7 @@
 
 ## Planned Changes
 
-- `builtin-tool-manager` - Declared: planned - 内置工具管理器，自动检测、下载预编译二进制并安装外部工具
+- `builtin-tool-manager` - Declared: complete - 内置工具管理器，自动检测、下载预编译二进制并安装外部工具
 - `tool-gh` - Declared: planned - GitHub CLI 集成工具实现
 - `tool-rtk` - Declared: planned - rtk 集成工具实现，作为 CLI 代理包装常见命令以减少 token 使用
 
